@@ -3,6 +3,10 @@
 import os
 import sys
 
+if os.geteuid() != 0:
+   print "Need to run using root!"
+   sys.exit(1)
+
 if os.getenv('TAPGW_HOME')==None:
    print "TAPGW_HOME is not set!"
    sys.exit(1)
