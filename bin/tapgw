@@ -1,0 +1,43 @@
+#! /usr/bin/env python
+
+import os
+import sys
+
+if os.getenv('TAPGW_HOME')==None:
+   print "TAPGW_HOME is not set!"
+   sys.exit(1)
+
+import os.path
+sys.path.append(os.path.join(os.getenv('TAPGW_HOME'), 'pkg'))
+
+import logging
+import logging.config
+logging.config.fileConfig(os.path.join(os.getenv('TAPGW_HOME'), 'conf', 'logging.conf'))
+
+from tapgw.daemon import Daemon
+
+ 
+class TapGwDaemon(Daemon):
+   def run(self):
+      while True:
+         import time
+         time.sleep(1)
+         logger = logging.getLogger("tapgw.hello")
+         logger.debug("!@!@@##")
+ 
+if __name__ == "__main__":
+   daemon = TapGwDaemon('/tmp/tapgw.pid')
+   if len(sys.argv) == 2:
+      if 'start' == sys.argv[1]:
+         daemon.start()
+      elif 'stop' == sys.argv[1]:
+         daemon.stop()
+      elif 'restart' == sys.argv[1]:
+         daemon.restart()
+      else:
+         print "Unknown command"
+         sys.exit(2)
+      sys.exit(0)
+   else:
+      print "usage: %s start|stop|restart" % sys.argv[0]
+      sys.exit(2)
