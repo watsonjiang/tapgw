@@ -14,7 +14,7 @@ class MockEthStack:
    def handle_north_inco(self, eth_pkg):
       self.eth_pkg = eth_pkg
 
-class EthTest(unittest.TestCase):
+class ArpTest(unittest.TestCase):
    def setUp(self):
       self._GW_IP = "192.0.0.1"
       self._GW_MAC = "51:00:00:00:00:01"
