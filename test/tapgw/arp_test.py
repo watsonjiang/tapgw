@@ -2,103 +2,78 @@
 import unittest
 import dpkt
 from tapgw.arp import ArpStack
+from tapgw.utils import mac_aton
+import socket
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-class MockIpStack:
+class MockEthStack:
    def __init__(self):
-      self.ip_pkg = None
-   def handle_south_inco(self, ip_pkg):
-      self.ip_pkg = ip_pkg
-
-class MockArpStack:
-   def __init__(self):
-      self.arp_pkg = None
-   def handle_south_inco(self, arp_pkg):
-      self.arp_pkg = arp_pkg
-
-MAC=str(bytearray([0x50, 0x00, 0x00, 0x00, 0x00, 0x01]))
+      self.eth_pkg = None
+   def handle_north_inco(self, eth_pkg):
+      self.eth_pkg = eth_pkg
 
 class EthTest(unittest.TestCase):
    def setUp(self):
-      self.eth_stack = EthStack(MAC)
-      self.ip_stack = MockIpStack()
-      self.arp_stack = MockArpStack()
-      self.eth_stack.set_ip_stack(self.ip_stack)
-      self.eth_stack.set_arp_stack(self.arp_stack)
+      self._GW_IP = "192.0.0.1"
+      self._GW_MAC = "51:00:00:00:00:01"
+      self.arp_stack = ArpStack(self._GW_IP, self._GW_MAC)
+      self.eth_stack = MockEthStack()
+      self.arp_stack.set_eth_stack(self.eth_stack)
       return
 
    def tearDown(self):
       return
 
+   def testGetSetArpCache(self):
+      self.arp_stack._add_arp_entry(socket.inet_aton("127.0.0.1"),
+                                    mac_aton("50:00:00:00:00:01"))
+      nmac = self.arp_stack.get_mac_addr(socket.inet_aton("127.0.0.1"))
+      self.assertEqual(nmac, mac_aton("50:00:00:00:00:01"))
+   
+   def testGetSetArpCacheNotFound(self):
+      nmac = self.arp_stack.get_mac_addr("127.0.0.1")
+      self.assertEqual(nmac, None) 
 
    def testHandleSouthInco1(self):
       '''
-      test arp broadcast pkg
+      test handle arp request
       '''
-      raw = bytearray(
-                  [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-                   0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
-                   0x08, 0x06, 0x00, 0x01, 0x08, 0x00,
-                   0x06, 0x04, 0x00, 0x01, 0x02, 0x02,
-                   0x02, 0x02, 0x02, 0x02, 0xc0, 0xa8,
-                   0x01, 0x01, 0xff, 0xff, 0xff, 0xff,
-                   0xff, 0xff, 0xc0, 0xa8, 0x01, 0x01,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-         
-      eth = dpkt.ethernet.Ethernet(raw)
-      self.eth_stack.handle_south_inco(eth)
-      self.assertEqual(self.arp_stack.arp_pkg, eth.data)
-      self.assertEqual(self.ip_stack.ip_pkg, None)
+      req = dpkt.arp.ARP()
+      req.op = dpkt.arp.ARP_OP_REQUEST
+      req.sha = mac_aton("00:00:00:00:00:01")
+      req.spa = socket.inet_aton("192.0.1.11")
+      req.tha = mac_aton("ff:ff:ff:ff:ff:ff")  #don't care
+      req.tpa = socket.inet_aton("192.0.0.1")  #where is 192.0.0.1 
+      self.arp_stack.handle_south_inco(req)
+      rsp = self.eth_stack.eth_pkg
+      self.assertEqual(rsp.op, dpkt.arp.ARP_OP_REPLY)
+      self.assertEqual(rsp.sha, mac_aton(self._GW_MAC))
+      self.assertEqual(rsp.spa, socket.inet_aton(self._GW_IP))
+      self.assertEqual(rsp.tha, mac_aton("00:00:00:00:00:01"))
+      self.assertEqual(rsp.tpa, socket.inet_aton("192.0.1.11"))
+      nmac = self.arp_stack.get_mac_addr(socket.inet_aton("192.0.1.11"))
+      self.assertEqual(nmac, mac_aton("00:00:00:00:00:01"))
       return 
 
    def testHandleSouthInco2(self):
       '''
-      test gw specific arp package
+      test handle arp request, not query gw, should be ignored
       '''
-      raw = bytearray(
-                  [0x50, 0x00, 0x00, 0x00, 0x00, 0x01, 
-                   0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
-                   0x08, 0x06, 0x00, 0x01, 0x08, 0x00,
-                   0x06, 0x04, 0x00, 0x01, 0x02, 0x02,
-                   0x02, 0x02, 0x02, 0x02, 0xc0, 0xa8,
-                   0x01, 0x01, 0x50, 0x00, 0x00, 0x00,
-                   0x00, 0x01, 0xc0, 0xa8, 0x01, 0x01,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-         
-      eth = dpkt.ethernet.Ethernet(raw)
-      self.eth_stack.handle_south_inco(eth)
-      self.assertEqual(self.arp_stack.arp_pkg, eth.data)
-      self.assertEqual(self.ip_stack.ip_pkg, None)
+      req = dpkt.arp.ARP()
+      req.op = dpkt.arp.ARP_OP_REQUEST
+      req.sha = mac_aton("00:00:00:00:00:01")
+      req.spa = socket.inet_aton("192.0.1.11")
+      req.tha = mac_aton("ff:ff:ff:ff:ff:ff")  #don't care
+      req.tpa = socket.inet_aton("192.0.0.2")  #where is 192.0.0.2 
+      self.arp_stack.handle_south_inco(req)
+      rsp = self.eth_stack.eth_pkg
+      self.assertEqual(rsp, None)
+      nmac = self.arp_stack.get_mac_addr(socket.inet_aton("192.0.1.11"))
+      self.assertEqual(nmac, mac_aton("00:00:00:00:00:01"))
       return 
 
-
-   def testHandleSouthInco3(self):
-      '''
-      test eth frame not target to gw
-      '''
-      raw = bytearray(
-                  [0xff, 0xff, 0xff, 0xff, 0xff, 0xf1, 
-                   0x02, 0x02, 0x02, 0x02, 0x02, 0x02,
-                   0x08, 0x06, 0x00, 0x01, 0x08, 0x00,
-                   0x06, 0x04, 0x00, 0x01, 0x02, 0x02,
-                   0x02, 0x02, 0x02, 0x02, 0xc0, 0xa8,
-                   0x01, 0x01, 0xff, 0xff, 0xff, 0xff,
-                   0xff, 0xf1, 0xc0, 0xa8, 0x01, 0x01,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                   0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-         
-      eth = dpkt.ethernet.Ethernet(raw)
-      self.eth_stack.handle_south_inco(eth)
-      self.assertEqual(self.arp_stack.arp_pkg, None)
-      self.assertEqual(self.ip_stack.ip_pkg, None)
-      return 
 
 
 if __name__ == "__main__":

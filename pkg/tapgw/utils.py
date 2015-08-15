@@ -1,3 +1,5 @@
+import struct
+
 def mac_ntoa(mac):
    """Print out hunman readable MAC address 
    """

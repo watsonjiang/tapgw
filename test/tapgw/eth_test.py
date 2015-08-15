@@ -2,6 +2,7 @@
 import unittest
 import dpkt
 from tapgw.eth import EthStack
+from tapgw.utils import mac_aton
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -18,7 +19,7 @@ class MockArpStack:
    def handle_south_inco(self, arp_pkg):
       self.arp_pkg = arp_pkg
 
-MAC=str(bytearray([0x50, 0x00, 0x00, 0x00, 0x00, 0x01]))
+MAC=mac_aton("50:00:00:00:00:01")
 
 class EthTest(unittest.TestCase):
    def setUp(self):
