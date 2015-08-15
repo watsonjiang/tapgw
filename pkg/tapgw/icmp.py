@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+import dpkt
 import logging
 
 logger = logging.getLogger('tapgw.icmp_stack')
