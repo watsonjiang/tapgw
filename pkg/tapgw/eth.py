@@ -1,10 +1,11 @@
 #! /usr/bin/env python
 import logging
 from tapgw.utils import *
+import dpkt
 
 logger = logging.getLogger('tapgw.eth_stack')
-MAC_BCAST = 0xffffffffffff
 class EthStack:
+   MAC_BCAST = str(bytearray([0xff, 0xff, 0xff, 0xff, 0xff, 0xff]))
    def __init__(self, mac):
       self._mac = mac
       self._ip_stack = None
@@ -20,7 +21,7 @@ class EthStack:
       handle eth frame from tap device (south incoming)
       '''
       logger.debug("eth south incoming: %s -> %s", mac_ntoa(eth.src), mac_ntoa(eth.dst))
-      if eth.dst != MAC_BCASE and eth.dst != self._mac:
+      if eth.dst != self.MAC_BCAST and eth.dst != self._mac:
          logger.debug("Got frame not target to gateway, ignore.")
          return
       if eth.type == dpkt.ethernet.ETH_TYPE_ARP:

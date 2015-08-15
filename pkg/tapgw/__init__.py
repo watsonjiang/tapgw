@@ -6,17 +6,13 @@ from tapgw.ip import IpStack
 from tapgw.arp import ArpStack
 from tapgw.icmp import IcmpStack
 from tapgw.eth import EthStack
-from tapgw.utils import *
 
 import logging
 
 logger = logging.getLogger('tapgw')
 
-def _monkey_patch():
-   import gevent.monkey
-   gevent.monkey.patch_all()
-
-def run_forever(**conf):
+def run_gw_forever(**conf):
+   logger.info("run gateway with conf %s" % conf)
    tap_dev_name = conf['tap_dev_name']
    gw_mac = mac_aton(conf['gw_mac'])
    gw_ip = conf['gw_ip']
@@ -25,8 +21,6 @@ def run_forever(**conf):
    rt_port = conf['router_port']
    rt_tbl = eval(conf['router_tbl']) 
    rt = Router(rt_ip, rt_port, rt_tbl)
-   logger.debug("apply gevent monkey patch.")
-   _monkey_patch()
 
    eth_stack = EthStack()
    arp_stack = ArpStack()
@@ -39,4 +33,8 @@ def run_forever(**conf):
    rt.start()
    #loop for ever
    while True:
+      import time
       time.sleep(1)  
+
+def run_lb_forever(**conf):
+   pass

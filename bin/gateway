@@ -13,21 +13,20 @@ if os.getenv('TAPGW_HOME')==None:
 
 import os.path
 sys.path.append(os.path.join(os.getenv('TAPGW_HOME'), 'pkg'))
-
-import logging
-import logging.config
-logging.config.fileConfig(os.path.join(os.getenv('TAPGW_HOME'), 'conf', 'logging.conf'))
-
+ 
 from tapgw.daemon import Daemon
 
- 
 class TapGwDaemon(Daemon):
    def run(self):
-      while True:
-         import time
-         time.sleep(1)
-         logger = logging.getLogger("tapgw.hello")
-         logger.debug("!@!@@##")
+      #apply gevent monkey patch
+      import gevent.monkey
+      gevent.monkey.patch_all()
+      #init logging 
+      import logging.config
+      logging.config.fileConfig(os.path.join(os.getenv('TAPGW_HOME'), 'conf', 'logging.conf'))
+      #run gateway
+      import tapgw
+      tapgw.run_gw_forever() 
  
 if __name__ == "__main__":
    daemon = TapGwDaemon('/tmp/tapgw.pid')
@@ -38,10 +37,12 @@ if __name__ == "__main__":
          daemon.stop()
       elif 'restart' == sys.argv[1]:
          daemon.restart()
+      elif 'fg' == sys.argv[1]:
+         daemon.run()
       else:
          print "Unknown command"
          sys.exit(2)
       sys.exit(0)
    else:
-      print "usage: %s start|stop|restart" % sys.argv[0]
+      print "usage: %s start|stop|restart|fg" % sys.argv[0]
       sys.exit(2)

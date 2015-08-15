@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import unittest
 import dpkt
-from tapgw.eth import EthStack
+from tapgw.arp import ArpStack
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
