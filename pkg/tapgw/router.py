@@ -14,19 +14,19 @@ class Router(threading.Thread):
    def set_ip_stack(self, ip_stack):
       self._ip_stack = ip_stack
 
-   def read_pkg():
+   def read_pkg(self):
       return 
 
-   def write_pkg():
+   def write_pkg(self, ip):
       pass
 
-   def router_loop(self):
+   def run(self):
       logger.debug("start router loop")
       while True:
          try:
             req = self.read_pkg()
             self._ip_stack.handle_north_inco(req)
          except:
-            logging.exception("router loop error!")
+            logger.exception("router loop error!")
 
      

@@ -2,6 +2,7 @@ import os
 from fcntl import ioctl
 import dpkt
 import struct
+import logging
 
 TUNSETIFF = 0x400454ca
 TUNSETPERSIST = TUNSETIFF + 1
@@ -15,7 +16,9 @@ IFF_NO_PI  = 0x1000
 
 TUNMODE = IFF_TAP|IFF_NO_PI
 
-class Tap:
+logger = logging.getLogger("tapgw.tap")
+
+class Tap(threading.Thread):
    '''
    class to abstract tap device
    '''
@@ -40,3 +43,15 @@ class Tap:
 
    def write_frame(self, frame):
       os.write(self._tun_fd, str(frame)) 
+
+   def set_eth_stack(self, eth_stack):
+      self._eth_stack = eth_stack
+     
+   def run(self):
+      logger.debug("start tap loop") 
+      while True:
+         try:
+            req = self.read_frame()
+            self._eth_stack.handle_south_inco(req)
+         except:
+            logger.exception("tap loop error!")  

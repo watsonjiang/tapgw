@@ -6,10 +6,10 @@ logger = logging.getLogger('tapgw.icmp_stack')
 
 class IcmpStack:
    def __init__(self):
-      self._eth_stack = None
+      self._ip_stack = None
 
-   def set_eth_stack(self, eth_stack):
-      self._eth_stack = eth_stack
+   def set_ip_stack(self, ip_stack):
+      self._ip_stack = ip_stack
 
    def handle_south_inco(self, icmp):
       if icmp.type == dpkt.icmp.ICMP_ECHO:
@@ -23,5 +23,5 @@ class IcmpStack:
          icmp_rpl.type = dpkt.icmp.ICMP_ECHOREPLY
          icmp_rpl.code = 0
          icmp_rpl.data = rpl
-         self._eth_stack.handle_north_inco(icmp_rpl)
-
+         self._ip_stack.handle_north_inco(icmp_rpl)
+         
