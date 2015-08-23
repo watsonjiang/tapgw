@@ -2,6 +2,7 @@
 
 import logging
 import threading
+import socket
 logger = logging.getLogger('tapgw.router')
 
 class Router(threading.Thread):
@@ -11,14 +12,27 @@ class Router(threading.Thread):
       self._rt_tbl_path = rt_tbl
       self._ip_stack = None 
 
+   def _open_socket(self):
+      self._svrsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+      self._svrsock.setsockopt(socekt.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      self._svrsock.bind('', 9999)
+      self._clisock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+      self._clisock.connect('127.0.0.4') 
+
    def set_ip_stack(self, ip_stack):
       self._ip_stack = ip_stack
 
    def read_pkg(self):
-      return 
+      try:
+         msg, addr = self._svrscok.recvfrom(1500)
+         logger.debug("Got data from %s" % addr)
+         return msg
+      except: 
+         logger.exception("fail to recv message")
+      
 
    def write_pkg(self, ip):
-      pass
+      self._clisock.sendall(ip)
 
    def run(self):
       logger.debug("start router loop")

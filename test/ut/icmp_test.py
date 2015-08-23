@@ -8,17 +8,17 @@ import socket
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-class MockEthStack:
+class MockStack:
    def __init__(self):
-      self.eth_pkg = None
-   def handle_north_inco(self, eth_pkg):
-      self.eth_pkg = eth_pkg
+      self.pkg = None
+   def handle_north_inco(self, pkg):
+      self.pkg = pkg
 
 class IcmpTest(unittest.TestCase):
    def setUp(self):
       self.icmp_stack = IcmpStack()
-      self.eth_stack = MockEthStack()
-      self.icmp_stack.set_eth_stack(self.eth_stack)
+      self.ip_stack = MockStack()
+      self.icmp_stack.set_ip_stack(self.ip_stack)
       return
 
    def tearDown(self):
@@ -37,7 +37,7 @@ class IcmpTest(unittest.TestCase):
       req_icmp.code = 0
       req_icmp.data = req
       self.icmp_stack.handle_south_inco(req_icmp)
-      rsp = self.eth_stack.eth_pkg
+      rsp = self.ip_stack.pkg
       self.assertEqual(rsp.type, dpkt.icmp.ICMP_ECHOREPLY)
       return 
 

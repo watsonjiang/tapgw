@@ -59,9 +59,9 @@ class EthStack:
       '''
       handle pkg from ip/arp stack (north incoming)
       '''
-      if pkg isinstance dpkt.ip.IP:
+      if isinstance(pkg, dpkt.ip.IP):
          self._handle_north_ip_inco(pkg)
-      elif pkg isinstance dpkt.arp.ARP:
+      elif isinstance(pkg, dpkt.arp.ARP):
          self._handle_north_arp_inco(pkg) 
       else:
          logger.info("unknow north income! %s", pkg.__class__.__name__) 

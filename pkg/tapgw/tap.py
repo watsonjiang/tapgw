@@ -3,6 +3,7 @@ from fcntl import ioctl
 import dpkt
 import struct
 import logging
+import threading
 
 TUNSETIFF = 0x400454ca
 TUNSETPERSIST = TUNSETIFF + 1

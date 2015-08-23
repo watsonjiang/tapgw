@@ -25,8 +25,8 @@ class IpStack:
    def handle_north_inco(self, pkg):
       '''handle pkg from icmp/router
       '''
-      if pkg isinstance dpkt.icmp.ICMP:
+      if isinstance(pkg, dpkt.icmp.ICMP):
          self._handle_north_icmp_inco(pkg)
-      elif pkg isinstance dpkt.ip.IP: 
+      elif isinstance(pkg, dpkt.ip.IP): 
          self._handle_north_ip_inco(ip)
 
