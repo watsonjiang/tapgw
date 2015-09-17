@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from tapgw.gateway import Gateway
+from tapgw.tap import Tap
 from tapgw.router import Router
 from tapgw.ip import IpStack
 from tapgw.arp import ArpStack
@@ -16,7 +16,7 @@ def run_gw_forever(**conf):
    tap_dev_name = conf['tap_dev_name']
    gw_mac = mac_aton(conf['gw_mac'])
    gw_ip = conf['gw_ip']
-   gw = Gateway(tap_dev_name, gw_mac, gw_ip)
+   gw = Tap(tap_dev_name, gw_mac, gw_ip)
    rt_ip = conf['router_ip']
    rt_port = conf['router_port']
    rt_tbl = eval(conf['router_tbl']) 
